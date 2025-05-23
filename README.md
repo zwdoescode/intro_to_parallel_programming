@@ -22,3 +22,19 @@ cmake ..
 make
 ```
 
+# How to build and run lesson code snippet
+
+Here is an example for Lesson 2 Code Snippet 
+
+nvcc -lineinfo hello_blockIdx.cu -o example1.exe
+
+./example1.exe
+
+# Command for each problem set
+
+PS1 
+```
+./../bin/HW1 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_1/cinque_terre_small.jpg test_HW1.jpg
+./../bin/HW2 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_2/cinque_terre_small.jpg test_hw2.jpg
+```
+

@@ -1,4 +1,4 @@
-# Install script for directory: /home/zhengwang/repositories/cs344
+# Install script for directory: /home/zhengwang/repositories/intro_to_parallel_programming
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -44,12 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/zhengwang/repositories/cs344/build/Problem Sets/Problem Set 1/cmake_install.cmake")
-  include("/home/zhengwang/repositories/cs344/build/Problem Sets/Problem Set 2/cmake_install.cmake")
-  include("/home/zhengwang/repositories/cs344/build/Problem Sets/Problem Set 3/cmake_install.cmake")
-  include("/home/zhengwang/repositories/cs344/build/Problem Sets/Problem Set 4/cmake_install.cmake")
-  include("/home/zhengwang/repositories/cs344/build/Problem Sets/Problem Set 5/cmake_install.cmake")
-  include("/home/zhengwang/repositories/cs344/build/Problem Sets/Problem Set 6/cmake_install.cmake")
+  include("/home/zhengwang/repositories/intro_to_parallel_programming/build/Problem_Sets/Problem_Set_2/cmake_install.cmake")
 
 endif()
 
@@ -61,5 +56,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/zhengwang/repositories/cs344/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/zhengwang/repositories/intro_to_parallel_programming/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

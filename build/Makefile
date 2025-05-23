@@ -57,10 +57,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/zhengwang/repositories/cs344
+CMAKE_SOURCE_DIR = /home/zhengwang/repositories/intro_to_parallel_programming
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/zhengwang/repositories/cs344/build
+CMAKE_BINARY_DIR = /home/zhengwang/repositories/intro_to_parallel_programming/build
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -87,9 +87,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/zhengwang/repositories/cs344/build/CMakeFiles /home/zhengwang/repositories/cs344/build//CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/zhengwang/repositories/intro_to_parallel_programming/build/CMakeFiles /home/zhengwang/repositories/intro_to_parallel_programming/build//CMakeFiles/progress.marks
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/zhengwang/repositories/cs344/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/zhengwang/repositories/intro_to_parallel_programming/build/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
@@ -117,19 +117,6 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named HW1
-
-# Build rule for target.
-HW1: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW1
-.PHONY : HW1
-
-# fast build rule for target.
-HW1/fast:
-	$(MAKE) $(MAKESILENT) -f "Problem Sets/Problem Set 1/CMakeFiles/HW1.dir/build.make" "Problem Sets/Problem Set 1/CMakeFiles/HW1.dir/build"
-.PHONY : HW1/fast
-
-#=============================================================================
 # Target rules for targets named HW2
 
 # Build rule for target.
@@ -139,60 +126,8 @@ HW2: cmake_check_build_system
 
 # fast build rule for target.
 HW2/fast:
-	$(MAKE) $(MAKESILENT) -f "Problem Sets/Problem Set 2/CMakeFiles/HW2.dir/build.make" "Problem Sets/Problem Set 2/CMakeFiles/HW2.dir/build"
+	$(MAKE) $(MAKESILENT) -f Problem_Sets/Problem_Set_2/CMakeFiles/HW2.dir/build.make Problem_Sets/Problem_Set_2/CMakeFiles/HW2.dir/build
 .PHONY : HW2/fast
-
-#=============================================================================
-# Target rules for targets named HW3
-
-# Build rule for target.
-HW3: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW3
-.PHONY : HW3
-
-# fast build rule for target.
-HW3/fast:
-	$(MAKE) $(MAKESILENT) -f "Problem Sets/Problem Set 3/CMakeFiles/HW3.dir/build.make" "Problem Sets/Problem Set 3/CMakeFiles/HW3.dir/build"
-.PHONY : HW3/fast
-
-#=============================================================================
-# Target rules for targets named HW4
-
-# Build rule for target.
-HW4: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW4
-.PHONY : HW4
-
-# fast build rule for target.
-HW4/fast:
-	$(MAKE) $(MAKESILENT) -f "Problem Sets/Problem Set 4/CMakeFiles/HW4.dir/build.make" "Problem Sets/Problem Set 4/CMakeFiles/HW4.dir/build"
-.PHONY : HW4/fast
-
-#=============================================================================
-# Target rules for targets named HW5
-
-# Build rule for target.
-HW5: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW5
-.PHONY : HW5
-
-# fast build rule for target.
-HW5/fast:
-	$(MAKE) $(MAKESILENT) -f "Problem Sets/Problem Set 5/CMakeFiles/HW5.dir/build.make" "Problem Sets/Problem Set 5/CMakeFiles/HW5.dir/build"
-.PHONY : HW5/fast
-
-#=============================================================================
-# Target rules for targets named HW6
-
-# Build rule for target.
-HW6: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW6
-.PHONY : HW6
-
-# fast build rule for target.
-HW6/fast:
-	$(MAKE) $(MAKESILENT) -f "Problem Sets/Problem Set 6/CMakeFiles/HW6.dir/build.make" "Problem Sets/Problem Set 6/CMakeFiles/HW6.dir/build"
-.PHONY : HW6/fast
 
 # Help Target
 help:
@@ -202,12 +137,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... HW1"
 	@echo "... HW2"
-	@echo "... HW3"
-	@echo "... HW4"
-	@echo "... HW5"
-	@echo "... HW6"
 .PHONY : help
 
 
