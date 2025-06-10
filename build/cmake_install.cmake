@@ -44,7 +44,7 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/zhengwang/repositories/intro_to_parallel_programming/build/Problem_Sets/Problem_Set_2/cmake_install.cmake")
+  include("/home/zhengwang/repositories/intro_to_parallel_programming/build/Problem_Sets/Problem_Set_3/cmake_install.cmake")
 
 endif()
 

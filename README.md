@@ -36,5 +36,6 @@ PS1
 ```
 ./../bin/HW1 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_1/cinque_terre_small.jpg test_HW1.jpg
 ./../bin/HW2 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_2/cinque_terre_small.jpg test_hw2.jpg
+./../bin/HW3 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_3/memorial_raw.png test_hw3.jpg
 ```
 

@@ -136,7 +136,8 @@ __global__ void tonemap(
 void preProcess(float** d_luminance, unsigned int** d_cdf,
                 size_t *numRows, size_t *numCols,
                 unsigned int *numberOfBins,
-                const std::string &filename) {
+                const std::string &filename) 
+{
   //make sure the context initializes ok
   checkCudaErrors(cudaFree(0));
 
@@ -206,7 +207,8 @@ void preProcess(float** d_luminance, unsigned int** d_cdf,
 
 void postProcess(const std::string& output_file, 
                  size_t numRows, size_t numCols,
-                 float min_log_Y, float max_log_Y) {
+                 float min_log_Y, float max_log_Y)
+{
   const int numPixels = numRows__ * numCols__;
 
   const int numThreads = 192;

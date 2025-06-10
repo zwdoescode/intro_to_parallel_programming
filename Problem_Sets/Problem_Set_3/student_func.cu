@@ -80,6 +80,106 @@
 */
 
 #include "utils.h"
+#include<iostream>
+#include <cmath>
+
+__global__ void min_reduce(float* d_out, const float* const d_in, int num)
+{
+   int threadId = threadIdx.x + blockDim.x * blockIdx.x;
+   if (threadId > num - 1) return;
+
+   if (threadId % 2 == 1) return;
+
+   if (threadId == num - 1) {
+      d_out[threadId/2] = d_in[threadId];
+   } else {
+      d_out[threadId/2] = d_in[threadId] < d_in[threadId+1]? d_in[threadId] : d_in[threadId+1];
+   }
+}
+
+__global__ void max_reduce(float* d_out, const float* const d_in, const int num)
+{
+   int threadId = threadIdx.x + blockDim.x * blockIdx.x;
+   if (threadId > num - 1) return;
+
+   if (threadId % 2 == 1)
+      return;
+
+   if (threadId == num - 1) {
+      d_out[threadId/2] = d_in[threadId];
+   } else {
+      d_out[threadId/2] = d_in[threadId] > d_in[threadId+1]? d_in[threadId] : d_in[threadId+1];
+   }
+}
+
+void reduce(float& out_val, const float* const d_logLuminance, int num, bool find_min)
+{
+   const size_t THREADS_PER_BLOCK = 1024;
+   float* d_in = nullptr;
+   float* d_out = nullptr;
+   while (num > 1) {
+      const size_t BLOCK_PER_GRID = std::ceil(1.0f * num / THREADS_PER_BLOCK);
+      const dim3 blockSize(THREADS_PER_BLOCK, 1, 1);
+      const dim3 gridSize(BLOCK_PER_GRID, 1, 1);
+      checkCudaErrors(cudaMalloc(&d_out, BLOCK_PER_GRID * sizeof(float)));
+      // const size_t sharedMemSize = sizeof(float) * ((num+1)/2);
+      if (!d_in) {
+         if (find_min)
+            min_reduce<<<gridSize, blockSize>>>(d_out, d_logLuminance, num);
+         else
+            max_reduce<<<gridSize, blockSize>>>(d_out, d_logLuminance, num);
+      } else {
+         if (find_min)
+            min_reduce<<<gridSize, blockSize>>>(d_out, d_in, num);
+         else
+            max_reduce<<<gridSize, blockSize>>>(d_out, d_in, num);
+      }
+      checkCudaErrors(cudaGetLastError());
+      num = (num + 1) / 2;
+      d_in = d_out;
+   }
+   checkCudaErrors(cudaMemcpy(&out_val, d_out, sizeof(float), cudaMemcpyDeviceToHost));
+}
+
+__global__ void generate_histogram(unsigned int* d_bin, const float* const d_logLuminance, size_t numBins, float range, float min_logLum)
+{
+   int threadId = threadIdx.x + blockDim.x * blockIdx.x;
+   if (threadId >= numBins) return;
+   int bin = (d_logLuminance[threadId] - min_logLum) / range * numBins;
+   bin = bin == numBins ? numBins - 1 : bin;
+   atomicAdd(&(d_bin[bin]), 1);
+}
+
+// Hillis Steele Scan
+__global__ void compute_cdf(unsigned int* d_cdf, const unsigned int* const d_bin, size_t numBins)
+{
+   int threadId = threadIdx.x + blockDim.x * blockIdx.x;
+   if (threadId >= numBins) return;
+   int prev_value = 0;
+   int prev_prev_value = 0;
+   int dist = 1;
+   for (int i = 0; i < numBins; i++) {
+      if (dist > numBins / 2) break;
+      if (i == 0) {
+         if (threadId == 0) {
+            d_cdf[threadId] = d_bin[threadId];
+         } else {
+            d_cdf[threadId] = d_bin[threadId] + d_bin[threadId-dist];
+         }
+      } else {
+         if (threadId >= dist) {
+            d_cdf[threadId] = prev_value + prev_prev_value;
+         }
+      }
+      __syncthreads();
+      prev_value = d_cdf[threadId];
+      dist = pow(2, i+1);
+      if (threadId >= dist) {
+         prev_prev_value = d_cdf[threadId - dist];
+      }
+      __syncthreads();
+   }
+}
 
 void your_histogram_and_prefixsum(const float* const d_logLuminance,
                                   unsigned int* const d_cdf,
@@ -99,6 +199,28 @@ void your_histogram_and_prefixsum(const float* const d_logLuminance,
     4) Perform an exclusive scan (prefix sum) on the histogram to get
        the cumulative distribution of luminance values (this should go in the
        incoming d_cdf pointer which already has been allocated for you)       */
+   // std::cout << "row: " << numRows << ", col: " << numCols << std::endl;
+   int num = numRows * numCols;
+   reduce(min_logLum, d_logLuminance, num, true);
+   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 
+   reduce(max_logLum, d_logLuminance, num, false);
+   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 
+   printf("%f %f\n", min_logLum, max_logLum);
+   float range = max_logLum - min_logLum;
+   printf("%f\n", range);
+
+   const int THREADS_PER_BLOCK = 1024;
+   const size_t BLOCK_PER_GRID = num / THREADS_PER_BLOCK + 1;
+   const dim3 blockSize(THREADS_PER_BLOCK, 1, 1);
+   const dim3 gridSize(BLOCK_PER_GRID, 1, 1);
+
+   unsigned int* d_bin;
+   checkCudaErrors(cudaMalloc(&d_bin, numBins * sizeof(unsigned int)));
+   checkCudaErrors(cudaMemset(d_bin, 0, numBins * sizeof(unsigned int)));
+   generate_histogram<<<gridSize, blockSize>>>(d_bin, d_logLuminance, numBins, range, min_logLum);
+   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
+   compute_cdf<<<gridSize, blockSize>>>(d_cdf, d_bin, numBins);
+   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 }
