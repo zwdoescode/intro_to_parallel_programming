@@ -41,7 +41,7 @@ int main(int argc, char **argv) {
   std::string input_file;
   std::string template_file;
   std::string output_file;
-  std::string reference_file;
+  std::string reference_file("reference.png");
   double perPixelError = 0.0;
   double globalError   = 0.0;
   bool useEpsCheck = false;
@@ -99,6 +99,10 @@ int main(int argc, char **argv) {
   * sorted values to the reference.                                           *
   *                                                                           *
   * Thrust containers are used for copying memory from the GPU                *
+  *                                                                           *
+  * To test the result, run postProcess ONLY for the reference soultion first,*
+  * Then comment it out and run postProcess ONLY for your sort and            *
+  * compareImages                                                             *
   * ************************************************************************* */
   thrust::device_ptr<unsigned int> d_inputVals(inputVals);
   thrust::device_ptr<unsigned int> d_inputPos(inputPos);
@@ -115,9 +119,9 @@ int main(int argc, char **argv) {
 						&h_outputVals[0], &h_outputPos[0],
 						numElems);
 
-  //postProcess(&h_outputVals[0], &h_outputPos[0], numElems, reference_file);
+  // postProcess(&h_outputVals[0], &h_outputPos[0], numElems, reference_file);
 
-  //compareImages(reference_file, output_file, useEpsCheck, perPixelError, globalError);
+  compareImages(reference_file, output_file, useEpsCheck, perPixelError, globalError);
 
   thrust::device_ptr<unsigned int> d_outputVals(outputVals);
   thrust::device_ptr<unsigned int> d_outputPos(outputPos);

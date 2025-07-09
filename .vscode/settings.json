@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "cmath": "cpp"
+        "cmath": "cpp",
+        "array": "cpp",
+        "sstream": "cpp",
+        "tuple": "cpp"
     }
 }

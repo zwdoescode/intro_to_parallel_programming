@@ -3,6 +3,9 @@
 
 #include "utils.h"
 #include <thrust/host_vector.h>
+#include <algorithm>
+#include <cstring>
+#include <stdio.h>
 
 /* Red Eye Removal
    ===============
@@ -42,6 +45,102 @@
 
  */
 
+__global__ void generate_histogram(unsigned int* d_bin, const size_t numElems, const unsigned int mask, const unsigned int bit, const unsigned int* d_input)
+{
+   int threadId = threadIdx.x + blockDim.x * blockIdx.x;
+   if (threadId >= numElems) return;
+   int bin = (d_input[threadId] & mask) >> bit;
+   atomicAdd(&(d_bin[bin]), 1);
+}
+
+// CUDA kernel for the up-sweep (reduce) phase
+__global__ void up_sweep(unsigned int *data, int n, int d) {
+    int k = threadIdx.x + blockDim.x * blockIdx.x;
+    int stride = 1 << (d + 1);
+    if (k < n / stride) {
+        int ai = stride * k + (1 << d) - 1;
+        int bi = stride * k + stride - 1;
+        data[bi] += data[ai];
+    }
+}
+
+// CUDA kernel for the down-sweep phase
+__global__ void down_sweep(unsigned int *data, int n, int d) {
+    int k = threadIdx.x + blockDim.x * blockIdx.x;
+    int stride = 1 << (d + 1);
+    if (k < n / stride) {
+        int ai = stride * k + (1 << d) - 1;
+        int bi = stride * k + stride - 1;
+        int t = data[ai];
+        data[ai] = data[bi];
+        data[bi] += t;
+    }
+}
+
+void blelloch_scan(unsigned int *d_scan, const unsigned int* d_bin, int numBins) {
+    unsigned int *d_data;
+    cudaMalloc(&d_data, numBins * sizeof(unsigned int));
+    cudaMemcpy(d_data, d_bin, numBins * sizeof(unsigned int), cudaMemcpyDeviceToDevice);
+
+    int threads_per_block = 512;
+    int blocks = (numBins + threads_per_block - 1) / threads_per_block;
+
+    // Up-sweep (reduce) phase
+    for (int d = 0; d < log2(numBins); ++d) {
+        up_sweep<<<blocks, threads_per_block>>>(d_data, numBins, d);
+        cudaDeviceSynchronize();
+    }
+
+    // Set last element to 0
+    cudaMemset(d_data + numBins - 1, 0, sizeof(unsigned int));
+
+    // Down-sweep phase
+    for (int d = log2(numBins) - 1; d >= 0; --d) {
+        down_sweep<<<blocks, threads_per_block>>>(d_data, numBins, d);
+        cudaDeviceSynchronize();
+    }
+
+    cudaMemcpy(d_scan, d_data, numBins * sizeof(int), cudaMemcpyDeviceToDevice);
+    cudaFree(d_data);
+}
+
+__global__ void naive_scan(unsigned int *d_out, const unsigned int *d_in, unsigned int n) {
+    int gid = blockIdx.x * blockDim.x + threadIdx.x;
+
+    if (gid < n) {
+        unsigned int sum = 0;
+        for (int i = 0; i < gid; ++i) {
+            sum += d_in[i];
+        }
+        d_out[gid] = sum;
+    }
+}
+
+// CUDA kernel for determining the final position and moving elements
+__global__ void scatter_kernel(unsigned int *d_in_vals, unsigned int *d_in_pos,
+                               unsigned int *d_out_vals, unsigned int *d_out_pos,
+                               unsigned int *d_scan,
+                               size_t n, unsigned int bit, unsigned int mask) {
+    int idx = threadIdx.x + blockDim.x * blockIdx.x;
+    // the commented out code doesn't work but I'm not sure why
+    // if (idx < n) {
+    //     unsigned int bin = (d_in_vals[idx] & mask) >> bit;
+    //     // Use atomic add to get a unique position for this thread
+    //     int pos = atomicAdd(&d_scan[bin], 1);
+    //     d_out_vals[pos] = d_in_vals[idx];
+    //     d_out_pos[pos] = d_in_pos[idx];
+    // }
+    if (idx == 0) {
+        for (int i = 0; i < n; i++) {
+            unsigned int bin = (d_in_vals[i] & mask) >> bit;
+            // Use atomic add to get a unique position for this thread
+            int pos = d_scan[bin];
+            d_out_vals[pos] = d_in_vals[i];
+            d_out_pos[pos] = d_in_pos[i];
+            d_scan[bin]++;
+        }
+    }
+}
 
 void your_sort(unsigned int* const d_inputVals,
                unsigned int* const d_inputPos,
@@ -49,6 +148,54 @@ void your_sort(unsigned int* const d_inputVals,
                unsigned int* const d_outputPos,
                const size_t numElems)
 { 
-  //TODO
-  //PUT YOUR SORT HERE
+  unsigned int* d_bin;
+  unsigned int* d_scan;
+
+  unsigned int* h_inputVals = (unsigned int*)malloc(numElems * sizeof(unsigned int));
+  unsigned int* h_inputPos = (unsigned int*)malloc(numElems * sizeof(unsigned int));
+  unsigned int* h_outputVals = (unsigned int*)malloc(numElems * sizeof(unsigned int));
+  unsigned int* h_outputPos = (unsigned int*)malloc(numElems * sizeof(unsigned int));
+
+  checkCudaErrors(cudaMemcpy(h_inputVals, d_inputVals, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(h_inputPos, d_inputPos, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(h_outputVals, d_outputVals, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+  checkCudaErrors(cudaMemcpy(h_outputPos, d_outputPos, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
+
+  const int numBits = 1;
+  const int numBins = 1 << numBits;
+
+  checkCudaErrors(cudaMalloc(&d_bin, numBins * sizeof(unsigned int)));
+  checkCudaErrors(cudaMalloc(&d_scan, numBins * sizeof(unsigned int)));
+  
+  unsigned int* h_bin = (unsigned int*)malloc(numBins * sizeof(unsigned int));
+  unsigned int* h_scan = (unsigned int*)malloc(numBins * sizeof(unsigned int));
+
+  const int THREADS_PER_BLOCK = 1024;
+  const size_t BLOCK_PER_GRID = numElems / THREADS_PER_BLOCK + 1;
+  const dim3 blockSize(THREADS_PER_BLOCK, 1, 1);
+  const dim3 gridSize(BLOCK_PER_GRID, 1, 1);
+
+  for (unsigned int i = 0; i < 8 * sizeof(unsigned int); i += numBits) {
+    unsigned int mask = (numBins - 1) << i;
+
+    checkCudaErrors(cudaMemset(d_bin, 0, numBins * sizeof(unsigned int)));
+    checkCudaErrors(cudaMemset(d_scan, 0, numBins * sizeof(unsigned int)));
+
+    generate_histogram<<<gridSize, blockSize>>>(d_bin, numElems, mask, i, d_inputVals);
+
+    blelloch_scan(d_scan, d_bin, numBins);
+
+    scatter_kernel<<<gridSize, blockSize>>>(
+        d_inputVals, d_inputPos, d_outputVals, d_outputPos, d_scan, 
+        numElems, i, mask);
+        cudaDeviceSynchronize();
+
+    cudaMemcpy(d_inputVals, d_outputVals, numElems * sizeof(unsigned int), cudaMemcpyDeviceToDevice);
+    cudaMemcpy(d_inputPos, d_outputPos, numElems * sizeof(unsigned int), cudaMemcpyDeviceToDevice);
+  }
+  cudaMemcpy(d_outputVals, d_inputVals, numElems * sizeof(unsigned int), cudaMemcpyDeviceToDevice);
+  cudaMemcpy(d_outputPos, d_inputPos, numElems * sizeof(unsigned int), cudaMemcpyDeviceToDevice);
+
+  cudaFree(d_bin);
+  cudaFree(d_scan);
 }

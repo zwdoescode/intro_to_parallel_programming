@@ -117,17 +117,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named HW3
+# Target rules for targets named HW4
 
 # Build rule for target.
-HW3: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW3
-.PHONY : HW3
+HW4: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 HW4
+.PHONY : HW4
 
 # fast build rule for target.
-HW3/fast:
-	$(MAKE) $(MAKESILENT) -f Problem_Sets/Problem_Set_3/CMakeFiles/HW3.dir/build.make Problem_Sets/Problem_Set_3/CMakeFiles/HW3.dir/build
-.PHONY : HW3/fast
+HW4/fast:
+	$(MAKE) $(MAKESILENT) -f Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/build.make Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/build
+.PHONY : HW4/fast
 
 # Help Target
 help:
@@ -137,7 +137,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... HW3"
+	@echo "... HW4"
 .PHONY : help
 
 
