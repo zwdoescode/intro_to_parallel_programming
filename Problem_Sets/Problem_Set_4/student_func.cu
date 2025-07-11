@@ -104,42 +104,23 @@ void blelloch_scan(unsigned int *d_scan, const unsigned int* d_bin, int numBins)
     cudaFree(d_data);
 }
 
-__global__ void naive_scan(unsigned int *d_out, const unsigned int *d_in, unsigned int n) {
-    int gid = blockIdx.x * blockDim.x + threadIdx.x;
-
-    if (gid < n) {
-        unsigned int sum = 0;
-        for (int i = 0; i < gid; ++i) {
-            sum += d_in[i];
-        }
-        d_out[gid] = sum;
-    }
-}
-
 // CUDA kernel for determining the final position and moving elements
 __global__ void scatter_kernel(unsigned int *d_in_vals, unsigned int *d_in_pos,
                                unsigned int *d_out_vals, unsigned int *d_out_pos,
                                unsigned int *d_scan,
                                size_t n, unsigned int bit, unsigned int mask) {
     int idx = threadIdx.x + blockDim.x * blockIdx.x;
-    // the commented out code doesn't work but I'm not sure why
-    // if (idx < n) {
-    //     unsigned int bin = (d_in_vals[idx] & mask) >> bit;
-    //     // Use atomic add to get a unique position for this thread
-    //     int pos = atomicAdd(&d_scan[bin], 1);
-    //     d_out_vals[pos] = d_in_vals[idx];
-    //     d_out_pos[pos] = d_in_pos[idx];
-    // }
-    if (idx == 0) {
-        for (int i = 0; i < n; i++) {
-            unsigned int bin = (d_in_vals[i] & mask) >> bit;
-            // Use atomic add to get a unique position for this thread
-            int pos = d_scan[bin];
-            d_out_vals[pos] = d_in_vals[i];
-            d_out_pos[pos] = d_in_pos[i];
-            d_scan[bin]++;
+    if (idx >= n) return;
+    unsigned int bin = (d_in_vals[idx] & mask) >> bit;
+    unsigned int pos = d_scan[bin];
+    for (int i = 0; i < idx; ++i) {
+        unsigned int temp_bin = (d_in_vals[i] & mask) >> bit;
+        if (temp_bin == bin) {
+            pos++;
         }
     }
+    d_out_vals[pos] = d_in_vals[idx];
+    d_out_pos[pos] = d_in_pos[idx];
 }
 
 void your_sort(unsigned int* const d_inputVals,
@@ -151,24 +132,11 @@ void your_sort(unsigned int* const d_inputVals,
   unsigned int* d_bin;
   unsigned int* d_scan;
 
-  unsigned int* h_inputVals = (unsigned int*)malloc(numElems * sizeof(unsigned int));
-  unsigned int* h_inputPos = (unsigned int*)malloc(numElems * sizeof(unsigned int));
-  unsigned int* h_outputVals = (unsigned int*)malloc(numElems * sizeof(unsigned int));
-  unsigned int* h_outputPos = (unsigned int*)malloc(numElems * sizeof(unsigned int));
-
-  checkCudaErrors(cudaMemcpy(h_inputVals, d_inputVals, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
-  checkCudaErrors(cudaMemcpy(h_inputPos, d_inputPos, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
-  checkCudaErrors(cudaMemcpy(h_outputVals, d_outputVals, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
-  checkCudaErrors(cudaMemcpy(h_outputPos, d_outputPos, numElems * sizeof(unsigned int), cudaMemcpyDeviceToHost));
-
   const int numBits = 1;
   const int numBins = 1 << numBits;
 
   checkCudaErrors(cudaMalloc(&d_bin, numBins * sizeof(unsigned int)));
   checkCudaErrors(cudaMalloc(&d_scan, numBins * sizeof(unsigned int)));
-  
-  unsigned int* h_bin = (unsigned int*)malloc(numBins * sizeof(unsigned int));
-  unsigned int* h_scan = (unsigned int*)malloc(numBins * sizeof(unsigned int));
 
   const int THREADS_PER_BLOCK = 1024;
   const size_t BLOCK_PER_GRID = numElems / THREADS_PER_BLOCK + 1;
