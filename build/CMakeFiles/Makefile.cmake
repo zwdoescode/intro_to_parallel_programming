@@ -8,14 +8,14 @@ set(CMAKE_DEPENDS_GENERATOR "Unix Makefiles")
 set(CMAKE_MAKEFILE_DEPENDS
   "CMakeCache.txt"
   "../CMakeLists.txt"
-  "../Problem_Sets/Problem_Set_4/CMakeLists.txt"
+  "../Problem_Sets/Problem_Set_5/CMakeLists.txt"
   "CMakeFiles/3.22.1/CMakeCCompiler.cmake"
   "CMakeFiles/3.22.1/CMakeCXXCompiler.cmake"
   "CMakeFiles/3.22.1/CMakeSystem.cmake"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_HW4.cu.o.cmake.pre-gen"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_HW4.cu.o.depend"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_student_func.cu.o.cmake.pre-gen"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_student_func.cu.o.depend"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_main.cu.o.cmake.pre-gen"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_main.cu.o.depend"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_student.cu.o.cmake.pre-gen"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_student.cu.o.depend"
   "/usr/lib/x86_64-linux-gnu/cmake/opencv4/OpenCVConfig-version.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/opencv4/OpenCVConfig.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/opencv4/OpenCVModules-release.cmake"
@@ -58,14 +58,14 @@ set(CMAKE_MAKEFILE_OUTPUTS
 # Byproducts of CMake generate step:
 set(CMAKE_MAKEFILE_PRODUCTS
   "CMakeFiles/CMakeDirectoryInformation.cmake"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_HW4.cu.o.cmake.pre-gen"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_student_func.cu.o.cmake.pre-gen"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_HW4.cu.o.cmake"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/HW4_generated_student_func.cu.o.cmake"
-  "Problem_Sets/Problem_Set_4/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_main.cu.o.cmake.pre-gen"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_student.cu.o.cmake.pre-gen"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_main.cu.o.cmake"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/HW5_generated_student.cu.o.cmake"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
-  "Problem_Sets/Problem_Set_4/CMakeFiles/HW4.dir/DependInfo.cmake"
+  "Problem_Sets/Problem_Set_5/CMakeFiles/HW5.dir/DependInfo.cmake"
   )

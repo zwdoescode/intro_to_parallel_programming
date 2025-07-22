@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "gputimer.h"
+#include "../../Final/smooth/gputimer.h"
 
 const int N= 1024;		// matrix size is NxN
 const int K= 32;				// tile size is KxK
@@ -25,8 +25,7 @@ int compare_matrices(float *gpu, float *ref)
     	for(int i=0; i < N; i++)
     		if (ref[i + j*N] != gpu[i + j*N])
     		{
-    			// printf("reference(%d,%d) = %f but test(%d,%d) = %f\n",
-    			// i,j,ref[i+j*N],i,j,test[i+j*N]);
+    			printf("reference(%d,%d) = %f but gpu(%d,%d) = %f\n", i,j,ref[i+j*N],i,j,gpu[i+j*N]);
     			result = 1;
     		}
     return result;
@@ -72,9 +71,10 @@ __global__ void
 transpose_parallel_per_row(float in[], float out[])
 {
 	int i = threadIdx.x;
+	if (i >= N) return;
 
 	for(int j=0; j < N; j++)
-		out[j + i*N] = in[i + j*N]; // out(j,i) = in(i,j)
+		out[j + i*N] = in[i + j*N];
 }
 
 // to be launched with one thread per element, in KxK threadblocks
@@ -85,7 +85,9 @@ transpose_parallel_per_element(float in[], float out[])
 	int i = blockIdx.x * K + threadIdx.x;
 	int j = blockIdx.y * K + threadIdx.y;
 
-	out[j + i*N] = in[i + j*N]; // out(j,i) = in(i,j)
+	if (i < N && j < N) {
+		out[j + i*N] = in[i + j*N]; // out(j,i) = in(i,j)
+	}
 }
 
 // to be launched with one thread per element, in (tilesize)x(tilesize) threadblocks

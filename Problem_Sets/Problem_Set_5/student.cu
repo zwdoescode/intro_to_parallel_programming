@@ -32,23 +32,99 @@ void yourHisto(const unsigned int* const vals, //INPUT
                unsigned int* const histo,      //OUPUT
                int numVals)
 {
-  //TODO fill in this kernel to calculate the histogram
-  //as quickly as possible
-
-  //Although we provide only one kernel skeleton,
-  //feel free to use more if it will help you
-  //write faster code
+  // Basic implementation - each thread processes one element
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  
+  if (tid < numVals) {
+    unsigned int bin = vals[tid];
+    // Note: Assuming bin values are valid, but add safety check if needed
+    atomicAdd(&histo[bin], 1);
+  }
 }
+
+// Optimized version using shared memory (uncomment to use)
+
+__global__
+void yourHistoOptimized(const unsigned int* const vals,
+                        unsigned int* const histo,
+                        int numVals,
+                        int numBins)
+{
+  // Shared memory for per-block histogram
+  extern __shared__ unsigned int localHisto[];
+  
+  int tid = blockIdx.x * blockDim.x + threadIdx.x;
+  int localTid = threadIdx.x;
+  
+  // Initialize shared memory
+  for (int i = localTid; i < numBins; i += blockDim.x) {
+    localHisto[i] = 0;
+  }
+  __syncthreads();
+  
+  // Each thread processes multiple elements to reduce overhead
+  for (int i = tid; i < numVals; i += blockDim.x * gridDim.x) {
+    unsigned int bin = vals[i];
+    if (bin < numBins) { // Safety check for bin bounds
+      atomicAdd(&localHisto[bin], 1);
+    }
+  }
+  __syncthreads();
+  
+  // Merge local histogram to global histogram
+  for (int i = localTid; i < numBins; i += blockDim.x) {
+    if (localHisto[i] > 0) {
+      atomicAdd(&histo[i], localHisto[i]);
+    }
+  }
+}
+
 
 void computeHistogram(const unsigned int* const d_vals, //INPUT
                       unsigned int* const d_histo,      //OUTPUT
                       const unsigned int numBins,
                       const unsigned int numElems)
 {
-  //TODO Launch the yourHisto kernel
+  // Define block size (number of threads per block)
+  const int blockSize = 512;
+  
+  // Choose approach:
+  // 1 = Basic atomic operations (simple, always works)
+  // 2 = Shared memory optimization (faster for reasonable numBins)
+  const int approach = 2;
 
-  //if you want to use/launch more than one kernel,
-  //feel free
+  switch (approach) {
+    case 1: {
+      // Basic approach - each thread processes one element
+      const int gridSize = (numElems + blockSize - 1) / blockSize;
+      yourHisto<<<gridSize, blockSize>>>(d_vals, d_histo, numElems);
+      break;
+    }
+    
+    case 2: {
+      // Optimized approach with shared memory
+      const int maxGridSize = 65535; // Maximum grid size for older GPUs
+      const int gridSizeOpt = (numElems + blockSize - 1) / blockSize;
+      const int finalGridSize = (gridSizeOpt < maxGridSize) ? gridSizeOpt : maxGridSize;
+      const int sharedMemSize = numBins * sizeof(unsigned int);
+      
+      // Check if shared memory size is reasonable (< 48KB per block)
+      if (sharedMemSize <= 48 * 1024) {
+        yourHistoOptimized<<<finalGridSize, blockSize, sharedMemSize>>>(
+          d_vals, d_histo, numElems, numBins);
+      } else {
+        // Fall back to basic approach if shared memory requirement is too large
+        printf("Warning: Too many bins for shared memory optimization, using basic approach\n");
+        const int gridSize = (numElems + blockSize - 1) / blockSize;
+        yourHisto<<<gridSize, blockSize>>>(d_vals, d_histo, numElems);
+      }
+      break;
+    }
+    
+    default:
+      printf("Error: Invalid approach selected\n");
+      return;
+  }
 
   cudaDeviceSynchronize(); checkCudaErrors(cudaGetLastError());
 }

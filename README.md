@@ -22,6 +22,8 @@ cmake ..
 make
 ```
 
+Note that it needs to be compiled with cuda 12.6. Otherwise the cuda kernel is not launched => I haven't figured out why
+
 # How to build and run lesson code snippet
 
 Here is an example for Lesson 2 Code Snippet 
@@ -35,8 +37,13 @@ nvcc -lineinfo hello_blockIdx.cu -o example1.exe
 PS1 
 ```
 ./../bin/HW1 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_1/cinque_terre_small.jpg test_HW1.jpg
+
 ./../bin/HW2 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_2/cinque_terre_small.jpg test_hw2.jpg
+
 ./../bin/HW3 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_3/memorial_raw.png test_hw3.jpg
+
 ./../bin/HW4 /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_4/red_eye_effect_5.jpg /home/zhengwang/repositories/intro_to_parallel_programming/Problem_Sets/Problem_Set_4/red_eye_effect_template_5.jpg test_hw4.jpg
+
+./../bin/HW5
 ```
 
